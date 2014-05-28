@@ -98,6 +98,11 @@ Qiniu_Error Qiniu_Io_PutBuffer(
 	Qiniu_Io_form form;
 	Qiniu_Io_form_init(&form, uptoken, key, extra);
 
+    if (key == NULL) {
+        // 没有指定key的情况，使用空字符串
+        // 副作用：魔法变量$(filename)将被赋成空字符串
+        key = ""
+    }
 	curl_formadd(
 		&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file",
 		CURLFORM_BUFFER, key, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, fsize, CURLFORM_END);
