@@ -88,6 +88,10 @@ static Qiniu_Error Qiniu_Io_call(
 
 	headers = curl_slist_append(NULL, "Expect:");
 
+	if (extra->dontKeepAlive) {
+		headers = curl_slist_append(headers, "Connection: close");
+	}
+
 	curl_easy_setopt(curl, CURLOPT_URL, QINIU_UP_HOST);
 	curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);

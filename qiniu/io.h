@@ -42,6 +42,9 @@ typedef struct _Qiniu_Io_PutExtra {
 	// which returns a JSON object.
 	void* callbackRet;
 	Qiniu_Error (*callbackRetParser)(void*, Qiniu_Json*);
+
+	// For those who don't want to keep the tcp link alive, zero means NO, none-zero means YES.
+	int dontKeepAlive;
 } Qiniu_Io_PutExtra;
 
 /*============================================================================*/
