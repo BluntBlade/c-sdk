@@ -26,6 +26,7 @@ extern "C"
 #define Qiniu_Rio_UnmatchedChecksum		9900
 #define Qiniu_Rio_InvalidPutProgress	9901
 #define Qiniu_Rio_PutFailed				9902
+#define Qiniu_Rio_PutInterrupted		9903
 
 /*============================================================================*/
 /* type Qiniu_Rio_WaitGroup */

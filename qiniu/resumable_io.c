@@ -336,7 +336,7 @@ static Qiniu_Error Qiniu_Rio_ResumableBlockput(
 		notifyRet = extra->notify(extra->notifyRecvr, blkIdx, blkSize, ret);
         if (notifyRet == QINIU_RIO_NOTIFY_EXIT) {
             // Terminate the upload process if  the caller requests
-            err.code = 9995;
+            err.code = Qiniu_Rio_PutInterrupted;
             err.message = "Interrupted by the caller";
             return err;
         }
@@ -363,7 +363,7 @@ lzRetry:
 				notifyRet = extra->notify(extra->notifyRecvr, blkIdx, blkSize, ret);
                 if (notifyRet == QINIU_RIO_NOTIFY_EXIT) {
                     // Terminate the upload process if the caller requests
-                    err.code = 9995;
+                    err.code = Qiniu_Rio_PutInterrupted;
                     err.message = "Interrupted by the caller";
                     return err;
                 }
@@ -508,6 +508,7 @@ typedef struct _Qiniu_Rio_task {
 	Qiniu_Rio_PutExtra* extra;
 	Qiniu_Rio_WaitGroup wg;
 	int* nfails;
+	int* ninterrupts;
 	int blkIdx;
 	int blkSize1;
 } Qiniu_Rio_task;
@@ -528,8 +529,9 @@ lzRetry:
 	ret = extra->progresses[blkIdx];
 	err = Qiniu_Rio_ResumableBlockput(c, &ret, task->f, blkIdx, task->blkSize1, extra);
 	if (err.code != 200) {
-        if (err.code == 9995) {
+        if (err.code == Qiniu_Rio_PutInterrupted) {
             // Terminate the upload process if the caller requests
+            (*task->ninterrupts)++;
             return;
         }
 
@@ -554,6 +556,9 @@ lzRetry:
 static Qiniu_Error ErrPutFailed = {
 	Qiniu_Rio_PutFailed, "resumable put failed"
 };
+static Qiniu_Error ErrPutInterrupted = {
+	Qiniu_Rio_PutInterrupted, "resumable put interrupted"
+};
 
 Qiniu_Error Qiniu_Rio_Put(
 	Qiniu_Client* self, Qiniu_Rio_PutRet* ret,
@@ -567,6 +572,7 @@ Qiniu_Error Qiniu_Rio_Put(
 	Qiniu_Auth auth, auth1 = self->auth;
 	int i, last, blkSize;
 	int nfails;
+    int ninterrupts;
 	Qiniu_Error err = Qiniu_Rio_PutExtra_Init(&extra, fsize, extra1);
 	if (err.code != 200) {
 		return err;
@@ -579,6 +585,7 @@ Qiniu_Error Qiniu_Rio_Put(
 	last = extra.blockCnt - 1;
 	blkSize = 1 << blockBits;
 	nfails = 0;
+    ninterrupts = 0;
 
 	self->auth = auth = Qiniu_UptokenAuth(uptoken);
 
@@ -589,6 +596,7 @@ Qiniu_Error Qiniu_Rio_Put(
 		task->mc = self;
 		task->wg = wg;
 		task->nfails = &nfails;
+		task->ninterrupts = &ninterrupts;
 		task->blkIdx = i;
 		task->blkSize1 = blkSize;
 		if (i == last) {
@@ -601,6 +609,8 @@ Qiniu_Error Qiniu_Rio_Put(
 	wg.itbl->Wait(wg.self);
 	if (nfails != 0) {
 		err = ErrPutFailed;
+    } else if (ninterrupts != 0) {
+		err = ErrPutInterrupted;
 	} else {
 		err = Qiniu_Rio_Mkfile2(self, ret, key, fsize, &extra);
 	}
