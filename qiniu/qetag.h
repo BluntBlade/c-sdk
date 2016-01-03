@@ -23,14 +23,18 @@ struct _Qiniu_Qetag_Context;
 struct _Qiniu_Qetag_Block;
 
 // 底层函数
-Qiniu_Error Qiniu_Qetag_New(struct _Qiniu_Qetag_Context ** ctx, size_t fsize);
+Qiniu_Error Qiniu_Qetag_New(struct _Qiniu_Qetag_Context ** ctx, unsigned int concurrency);
+Qiniu_Error Qiniu_Qetag_Reset(struct _Qiniu_Qetag_Context * ctx);
 void Qiniu_Qetag_Destroy(struct _Qiniu_Qetag_Context * ctx);
-Qiniu_Error Qiniu_Qetag_Next(struct _Qiniu_Qetag_Context * ctx, struct _Qiniu_Qetag_Block ** blk, size_t * blkMaxSize);
-Qiniu_Error Qiniu_Qetag_Update(struct _Qiniu_Qetag_Block * blk, const char * buf, size_t size);
+Qiniu_Error Qiniu_Qetag_Update(struct _Qiniu_Qetag_Context * ctx, const char * buf, size_t bufSize);
 Qiniu_Error Qiniu_Qetag_Final(struct _Qiniu_Qetag_Context * ctx, char ** digest);
 
+Qiniu_Error Qiniu_Qetag_AllocateBlock(struct _Qiniu_Qetag_Context * ctx, struct _Qiniu_Qetag_Block ** blk, size_t * blkCapacity);
+Qiniu_Error Qiniu_Qetag_UpdateBlock(struct _Qiniu_Qetag_Block * blk, const char * buf, size_t bufSize, size_t * blkCapacity);
+Qiniu_Error Qiniu_Qetag_CommitBlock(struct _Qiniu_Qetag_Context * ctx, struct _Qiniu_Qetag_Block * blk);
+
 // 单线程计算 QETAG
-Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, size_t fsize, char ** digest);
+Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, size_t fileSize, char ** digest);
 Qiniu_Error Qiniu_Qetag_DigestBuffer(const char * buf, size_t fsize, char ** digest);
 
 #pragma pack()
