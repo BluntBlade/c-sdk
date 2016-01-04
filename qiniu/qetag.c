@@ -36,7 +36,7 @@ typedef struct _Qiniu_Qetag_Context
     Qiniu_Qetag_Block * blk;
 
     SHA_CTX sha1Ctx;
-    Qiniu_Qetag_Block blkArray[0];
+    Qiniu_Qetag_Block blkArray[1];
 } Qiniu_Qetag_Context;
 
 static Qiniu_Error Qiniu_Qetag_mergeBlocks(struct _Qiniu_Qetag_Context * ctx) {
@@ -125,7 +125,7 @@ Qiniu_Error Qiniu_Qetag_New(struct _Qiniu_Qetag_Context ** ctx, unsigned int con
         concurrency = BLOCK_ELEMENT_MAX_COUNT;
     } // if
 
-    newCtx = calloc(1, sizeof(*newCtx) + sizeof(newCtx->blkArray[0]) * concurrency);
+    newCtx = calloc(1, sizeof(*newCtx) + sizeof(newCtx->blkArray[0]) * (concurrency - 1));
     if (newCtx == NULL) {
         err.code = 9999;
         err.message = "not enough memory";
