@@ -34,7 +34,7 @@ Qiniu_Error Qiniu_Qetag_UpdateBlock(struct _Qiniu_Qetag_Block * blk, const char 
 void Qiniu_Qetag_CommitBlock(struct _Qiniu_Qetag_Context * ctx, struct _Qiniu_Qetag_Block * blk);
 
 // 单线程计算 QETAG
-Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, size_t fileSize, char ** digest);
+Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, char ** digest);
 Qiniu_Error Qiniu_Qetag_DigestBuffer(const char * buf, size_t fsize, char ** digest);
 
 #pragma pack()

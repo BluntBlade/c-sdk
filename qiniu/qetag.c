@@ -314,12 +314,62 @@ void Qiniu_Qetag_CommitBlock(struct _Qiniu_Qetag_Context * ctx, struct _Qiniu_Qe
     ctx->blkCount += 1;
 } // Qiniu_Qetag_CommitBlock
 
-Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, size_t fileSize, char ** digest)
+Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, char ** digest)
 {
     Qiniu_Error err;
+	Qiniu_Reader body;
+	Qiniu_Section section;
+    Qiniu_Off_T offset = 0;
+    size_t readingBytes = (BLOCK_MAX_SIZE << 2);
+    ssize_t readBytes = 0;
+	Qiniu_File * f = NULL;
+    struct _Qiniu_Qetag_Context * ctx = NULL;
+    char * buf = NULL;
 
-    err.code = 200;
-    err.message = "ok";
+    // 1MB buffer
+    buf = malloc(readingBytes);
+    if (!buf) {
+        err.code = 9999;
+        err.message = "no enough memory";
+        return err;
+    }
+
+    err = Qiniu_Qetag_New(&ctx, 1);
+    if (err.code != 200) {
+        goto DIGESTFILE_NEWCTX_ERROR;
+    }
+
+	err = Qiniu_File_Open(&f, localFile);
+	if (err.code != 200) {
+        goto DIGESTFILE_OPEN_ERROR;
+	}
+
+    do {
+        readBytes = Qiniu_File_ReadAt(f, buf, readingBytes, offset);
+        if (readBytes < 0) {
+            err.code = 9990;
+            err.message = "failed in reading file";
+            goto DIGESTFILE_UPDATE_ERROR;
+        } else if (readBytes > 0) {
+            err = Qiniu_Qetag_Update(ctx, buf, readBytes);
+            if (err.code != 200) {
+                goto DIGESTFILE_UPDATE_ERROR;
+            }
+            offset += readBytes;
+        } // if
+    } while(readBytes > 0);
+
+    err = Qiniu_Qetag_Final(ctx, digest);
+
+DIGESTFILE_UPDATE_ERROR:
+    Qiniu_File_Close(f);
+
+DIGESTFILE_OPEN_ERROR:
+    Qiniu_Qetag_Destroy(ctx);
+
+DIGESTFILE_NEWCTX_ERROR:
+    free(buf);
+
     return err;
 } // Qiniu_Qetag_DigestFile
 
@@ -335,6 +385,7 @@ Qiniu_Error Qiniu_Qetag_DigestBuffer(const char * buf, size_t bufSize, char ** d
 
     err = Qiniu_Qetag_Update(ctx, buf, bufSize);
     if (err.code != 200) {
+        Qiniu_Qetag_Destroy(ctx);
         return err;
     }
 
