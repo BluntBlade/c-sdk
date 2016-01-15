@@ -317,10 +317,8 @@ void Qiniu_Qetag_CommitBlock(struct _Qiniu_Qetag_Context * ctx, struct _Qiniu_Qe
 Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, char ** digest)
 {
     Qiniu_Error err;
-	Qiniu_Reader body;
-	Qiniu_Section section;
     Qiniu_Off_T offset = 0;
-    size_t readingBytes = (BLOCK_MAX_SIZE << 2);
+    size_t readingBytes = (BLOCK_MAX_SIZE >> 2);
     ssize_t readBytes = 0;
 	Qiniu_File * f = NULL;
     struct _Qiniu_Qetag_Context * ctx = NULL;
