@@ -61,7 +61,7 @@ static Qiniu_Error Qiniu_Qetag_mergeBlocks(struct _Qiniu_Qetag_Context * ctx) {
         blk->done = NO;
         
         ctx->blkBegin += 1;
-        if (ctx->blkBegin > ctx->blkElementCount) {
+        if (ctx->blkBegin >= ctx->blkElementCount) {
             ctx->blkBegin = 0;
         }
         ctx->blkUnused += 1;
@@ -103,7 +103,7 @@ static Qiniu_Error Qiniu_Qetag_allocateBlock(struct _Qiniu_Qetag_Context * ctx, 
 
     ctx->blkUnused -= 1;
     ctx->blkEnd += 1;
-    if (ctx->blkEnd > ctx->blkElementCount) {
+    if (ctx->blkEnd >= ctx->blkElementCount) {
         ctx->blkEnd = 0;
     }
 
