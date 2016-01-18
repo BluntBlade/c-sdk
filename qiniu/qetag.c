@@ -226,38 +226,34 @@ Qiniu_Error Qiniu_Qetag_Final(struct _Qiniu_Qetag_Context * ctx, char ** digest)
         ctx->blk = NULL;
     } // if
 
-    if (ctx->blkCount > 0) {
-        memset(digestSummary, 0, sizeof(digestSummary));
+    if (ctx->blkCount <= 1) {
+        digestSummary[0] = 0x16;
 
-        if (ctx->blkCount == 1) {
-            digestSummary[0] = 0x16;
-
-            if (SHA1_Final(&digestSummary[1], &ctx->blkArray[0].sha1Ctx) == 0) {
-                err.code = 9999;
-                err.message = "openssl internal error";
-                return err;
-            } // if
-        } else {
-            err = Qiniu_Qetag_mergeBlocks(ctx);
-            if (err.code != 200) {
-                return err;
-            }
-
-            digestSummary[0] = 0x96;
-            if (SHA1_Final(&digestSummary[1], &ctx->sha1Ctx) == 0) {
-                err.code = 9999;
-                err.message = "openssl internal error";
-                return err;
-            }
-        } // if
-
-        newDigest = Qiniu_Memory_Encode((const char *)digestSummary, 1 + SHA_DIGEST_LENGTH);
-        if (newDigest == NULL) {
+        if (SHA1_Final(&digestSummary[1], &ctx->blkArray[0].sha1Ctx) == 0) {
             err.code = 9999;
-            err.message = "no enough memory";
+            err.message = "openssl internal error";
+            return err;
+        } // if
+    } else {
+        err = Qiniu_Qetag_mergeBlocks(ctx);
+        if (err.code != 200) {
+            return err;
+        }
+
+        digestSummary[0] = 0x96;
+        if (SHA1_Final(&digestSummary[1], &ctx->sha1Ctx) == 0) {
+            err.code = 9999;
+            err.message = "openssl internal error";
             return err;
         }
     } // if
+
+    newDigest = Qiniu_Memory_Encode((const char *)digestSummary, 1 + SHA_DIGEST_LENGTH);
+    if (newDigest == NULL) {
+        err.code = 9999;
+        err.message = "no enough memory";
+        return err;
+    }
 
     *digest = newDigest;
     err.code = 200;
@@ -310,8 +306,12 @@ Qiniu_Error Qiniu_Qetag_UpdateBlock(struct _Qiniu_Qetag_Block * blk, const char 
 
 void Qiniu_Qetag_CommitBlock(struct _Qiniu_Qetag_Context * ctx, struct _Qiniu_Qetag_Block * blk)
 {
-    blk->done = YES;
-    ctx->blkCount += 1;
+    if (blk->capacity < BLOCK_MAX_SIZE) {
+        blk->done = YES;
+        ctx->blkCount += 1;
+    } else {
+        blk->done = NO;
+    }
 } // Qiniu_Qetag_CommitBlock
 
 Qiniu_Error Qiniu_Qetag_DigestFile(const char * localFile, char ** digest)
