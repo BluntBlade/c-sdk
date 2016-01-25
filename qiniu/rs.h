@@ -40,6 +40,7 @@ typedef struct _Qiniu_RS_PutPolicy {
     Qiniu_Uint32 detectMime;
     Qiniu_Uint32 insertOnly;
     Qiniu_Uint32 expires;
+    Qiniu_Uint32 deleteAfterDays;
 } Qiniu_RS_PutPolicy;
 
 /* @endgist */
