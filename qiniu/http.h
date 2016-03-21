@@ -63,6 +63,7 @@ typedef struct cJSON Qiniu_Json;
 
 const char* Qiniu_Json_GetString(Qiniu_Json* self, const char* key, const char* defval);
 Qiniu_Int64 Qiniu_Json_GetInt64(Qiniu_Json* self, const char* key, Qiniu_Int64 defval);
+void Qiniu_Json_Destroy(Qiniu_Json* self);
 
 /*============================================================================*/
 /* type Qiniu_Auth */

@@ -254,19 +254,28 @@ static void Qiniu_Io_PutExtra_initFrom(Qiniu_Io_PutExtra* self, Qiniu_Rio_PutExt
 static Qiniu_Error Qiniu_Rio_bput(
 	Qiniu_Client* self, Qiniu_Rio_BlkputRet* ret, Qiniu_Reader body, int bodyLength, const char* url)
 {
+	Qiniu_Rio_BlkputRet retFromResp;
 	Qiniu_Json* root;
+
 	Qiniu_Error err = Qiniu_Client_CallWithBinary(self, &root, url, body, bodyLength, NULL);
 	if (err.code == 200) {
-		ret->ctx = Qiniu_Json_GetString(root, "ctx", NULL);
-		ret->checksum = Qiniu_Json_GetString(root, "checksum", NULL);
-		ret->host = Qiniu_Json_GetString(root, "host", NULL);
-		ret->crc32 = (Qiniu_Uint32)Qiniu_Json_GetInt64(root, "crc32", 0);
-		ret->offset = (Qiniu_Uint32)Qiniu_Json_GetInt64(root, "offset", 0);
-		if (ret->ctx == NULL || ret->host == NULL || ret->offset == 0) {
+		retFromResp.ctx = Qiniu_Json_GetString(root, "ctx", NULL);
+		retFromResp.checksum = Qiniu_Json_GetString(root, "checksum", NULL);
+		retFromResp.host = Qiniu_Json_GetString(root, "host", NULL);
+		retFromResp.crc32 = (Qiniu_Uint32)Qiniu_Json_GetInt64(root, "crc32", 0);
+		retFromResp.offset = (Qiniu_Uint32)Qiniu_Json_GetInt64(root, "offset", 0);
+
+		if (retFromResp.ctx == NULL || retFromResp.host == NULL || retFromResp.offset == 0) {
+			Qiniu_Json_Destroy(root);
 			err.code = 9998;
 			err.message = "unexcepted response: invalid ctx, host or offset";
+			return err;
 		}
+
+		Qiniu_Rio_BlkputRet_Assign(ret, &retFromResp);
 	}
+
+	Qiniu_Json_Destroy(root);
 	return err;
 }
 
@@ -374,7 +383,7 @@ lzRetry:
 			err = ErrUnmatchedChecksum;
 		} else {
 			if (err.code == Qiniu_Rio_InvalidCtx) {
-				ret->ctx = NULL; // reset
+				Qiniu_Rio_BlkputRet_Cleanup(ret); // reset
 				Qiniu_Log_Warn("ResumableBlockput: invalid ctx, please retry");
 				return err;
 			}

@@ -161,6 +161,11 @@ Qiniu_Int64 Qiniu_Json_GetInt64(Qiniu_Json* self, const char* key, Qiniu_Int64 d
 	}
 }
 
+void Qiniu_Json_Destroy(Qiniu_Json* self)
+{
+	cJSON_Delete(self);
+} // Qiniu_Json_Destroy
+
 Qiniu_Uint32 Qiniu_Json_GetInt(Qiniu_Json* self, const char* key, Qiniu_Uint32 defval)
 {
 	Qiniu_Json* sub;
