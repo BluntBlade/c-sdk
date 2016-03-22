@@ -515,7 +515,7 @@ typedef struct _Qiniu_Rio_task {
 	Qiniu_Rio_PutExtra* extra;
 	Qiniu_Rio_WaitGroup wg;
 	int* nfails;
-	int* ninterrupts;
+	Qiniu_Count* ninterrupts;
 	int blkIdx;
 	int blkSize1;
 } Qiniu_Rio_task;
@@ -532,6 +532,12 @@ static void Qiniu_Rio_doTask(void* params)
 	int blkIdx = task->blkIdx;
 	int tryTimes = extra->tryTimes;
 
+	if ((*task->ninterrupts) > 0) {
+		free(task);
+		wg.itbl->Done(wg.self);
+		return;
+	}
+
 	memset(&ret, 0, sizeof(ret));
 
 lzRetry:
@@ -540,7 +546,7 @@ lzRetry:
 	if (err.code != 200) {
         if (err.code == Qiniu_Rio_PutInterrupted) {
             // Terminate the upload process if the caller requests
-            (*task->ninterrupts)++;
+			Qiniu_Count_Inc(task->ninterrupts);
 			free(task);
 			Qiniu_Rio_BlkputRet_Cleanup(&ret);
 			wg.itbl->Done(wg.self);
@@ -585,7 +591,7 @@ Qiniu_Error Qiniu_Rio_Put(
 	Qiniu_Auth auth, auth1 = self->auth;
 	int i, last, blkSize;
 	int nfails;
-    int ninterrupts;
+    Qiniu_Count ninterrupts;
 	Qiniu_Error err = Qiniu_Rio_PutExtra_Init(&extra, fsize, extra1);
 	if (err.code != 200) {
 		return err;
@@ -593,7 +599,6 @@ Qiniu_Error Qiniu_Rio_Put(
 
 	tm = extra.threadModel;
 	wg = tm.itbl->WaitGroup(tm.self);
-	wg.itbl->Add(wg.self, extra.blockCnt);
 
 	last = extra.blockCnt - 1;
 	blkSize = 1 << blockBits;
@@ -616,7 +621,11 @@ Qiniu_Error Qiniu_Rio_Put(
 			offbase = (Qiniu_Int64)(i) << blockBits;
 			task->blkSize1 = (int)(fsize - offbase);
 		}
+		wg.itbl->Add(wg.self, 1);
 		tm.itbl->RunTask(tm.self, Qiniu_Rio_doTask, task);
+		if (ninterrupts > 0) {
+			break;
+		}
 	}
 
 	wg.itbl->Wait(wg.self);
