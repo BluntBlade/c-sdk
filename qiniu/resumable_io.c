@@ -129,7 +129,7 @@ static void Qiniu_Rio_BlkputRet_Cleanup(Qiniu_Rio_BlkputRet* self)
 {
 	if (self->ctx != NULL) {
 		free((void*)self->ctx);
-		self->ctx = NULL;
+		memset(self, 0, sizeof(*self));
 	}
 }
 
@@ -535,12 +535,13 @@ static void Qiniu_Rio_doTask(void* params)
 	int tryTimes = extra->tryTimes;
 
 lzRetry:
-	ret = extra->progresses[blkIdx];
+	Qiniu_Rio_BlkputRet_Assign(&ret, &extra->progresses[blkIdx]);
 	err = Qiniu_Rio_ResumableBlockput(c, &ret, task->f, blkIdx, task->blkSize1, extra);
 	if (err.code != 200) {
         if (err.code == Qiniu_Rio_PutInterrupted) {
             // Terminate the upload process if the caller requests
             (*task->ninterrupts)++;
+			Qiniu_Rio_BlkputRet_Cleanup(&ret);
             return;
         }
 
@@ -557,6 +558,7 @@ lzRetry:
 	}
 	wg.itbl->Done(wg.self);
 	free(task);
+	Qiniu_Rio_BlkputRet_Cleanup(&ret);
 }
 
 /*============================================================================*/
