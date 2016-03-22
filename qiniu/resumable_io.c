@@ -534,6 +534,7 @@ static void Qiniu_Rio_doTask(void* params)
 
 	if ((*task->ninterrupts) > 0) {
 		free(task);
+		Qiniu_Count_Inc(task->ninterrupts);
 		wg.itbl->Done(wg.self);
 		return;
 	}
@@ -546,9 +547,9 @@ lzRetry:
 	if (err.code != 200) {
         if (err.code == Qiniu_Rio_PutInterrupted) {
             // Terminate the upload process if the caller requests
-			Qiniu_Count_Inc(task->ninterrupts);
-			free(task);
 			Qiniu_Rio_BlkputRet_Cleanup(&ret);
+			free(task);
+			Qiniu_Count_Inc(task->ninterrupts);
 			wg.itbl->Done(wg.self);
             return;
         }
@@ -564,8 +565,8 @@ lzRetry:
 	} else {
 		Qiniu_Rio_BlkputRet_Assign(&extra->progresses[blkIdx], &ret);
 	}
-	free(task);
 	Qiniu_Rio_BlkputRet_Cleanup(&ret);
+	free(task);
 	wg.itbl->Done(wg.self);
 }
 
