@@ -266,7 +266,6 @@ static Qiniu_Error Qiniu_Rio_bput(
 		retFromResp.offset = (Qiniu_Uint32)Qiniu_Json_GetInt64(root, "offset", 0);
 
 		if (retFromResp.ctx == NULL || retFromResp.host == NULL || retFromResp.offset == 0) {
-			Qiniu_Json_Destroy(root);
 			err.code = 9998;
 			err.message = "unexcepted response: invalid ctx, host or offset";
 			return err;
@@ -275,7 +274,6 @@ static Qiniu_Error Qiniu_Rio_bput(
 		Qiniu_Rio_BlkputRet_Assign(ret, &retFromResp);
 	}
 
-	Qiniu_Json_Destroy(root);
 	return err;
 }
 
@@ -534,6 +532,8 @@ static void Qiniu_Rio_doTask(void* params)
 	int blkIdx = task->blkIdx;
 	int tryTimes = extra->tryTimes;
 
+	memset(&ret, 0, sizeof(ret));
+
 lzRetry:
 	Qiniu_Rio_BlkputRet_Assign(&ret, &extra->progresses[blkIdx]);
 	err = Qiniu_Rio_ResumableBlockput(c, &ret, task->f, blkIdx, task->blkSize1, extra);
@@ -541,7 +541,9 @@ lzRetry:
         if (err.code == Qiniu_Rio_PutInterrupted) {
             // Terminate the upload process if the caller requests
             (*task->ninterrupts)++;
+			free(task);
 			Qiniu_Rio_BlkputRet_Cleanup(&ret);
+			wg.itbl->Done(wg.self);
             return;
         }
 
@@ -556,9 +558,9 @@ lzRetry:
 	} else {
 		Qiniu_Rio_BlkputRet_Assign(&extra->progresses[blkIdx], &ret);
 	}
-	wg.itbl->Done(wg.self);
 	free(task);
 	Qiniu_Rio_BlkputRet_Cleanup(&ret);
+	wg.itbl->Done(wg.self);
 }
 
 /*============================================================================*/
