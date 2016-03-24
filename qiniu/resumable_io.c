@@ -21,6 +21,72 @@
 /*============================================================================*/
 /* type Qiniu_Rio_ST - SingleThread */
 
+#if defined(_WIN32)
+
+#include <windows.h>
+
+typedef struct _Qiniu_Rio_MTWG_Data
+{
+    Qiniu_Count addedCount;
+    Qiniu_Count doneCount;
+    HANDLE event;
+} Qiniu_Rio_MTWG_Data;
+
+static void Qiniu_Rio_MTWG_Add(void* self, int n)
+{
+    Qiniu_Count_Inc(&((Qiniu_Rio_MTWG_Data*)self)->addedCount);
+} // Qiniu_Rio_MTWG_Add
+
+static void Qiniu_Rio_MTWG_Done(void* self)
+{
+    Qiniu_Count_Inc(&((Qiniu_Rio_MTWG_Data*)self)->doneCount);
+    SetEvent(((Qiniu_Rio_MTWG_Data*)self)->event);
+} // Qiniu_Rio_MTWG_Done
+
+static void Qiniu_Rio_MTWG_Wait(void* self)
+{
+    Qiniu_Rio_MTWG_Data * data = (Qiniu_Rio_MTWG_Data*)self;
+    Qiniu_Count lastDoneCount = data->doneCount;
+    DWORD ret = 0;
+
+    while (lastDoneCount != data->addedCount) {
+        ret = WaitForSingleObject(((Qiniu_Rio_MTWG_Data*)self)->event, INFINITE);
+        if (ret == WAIT_OBJECT_0) {
+            lastDoneCount = data->doneCount;
+        }
+    } // while
+} // Qiniu_Rio_MTWG_Wait
+
+static void Qiniu_Rio_MTWG_Release(void* self)
+{
+    CloseHandle(((Qiniu_Rio_MTWG_Data*)self)->event);
+    free(self);
+} // Qiniu_Rio_MTWG_Release
+
+static Qiniu_Rio_WaitGroup_Itbl Qiniu_Rio_MTWG_Itbl = {
+    &Qiniu_Rio_MTWG_Add,
+    &Qiniu_Rio_MTWG_Done,
+    &Qiniu_Rio_MTWG_Wait,
+    &Qiniu_Rio_MTWG_Release,
+};
+
+Qiniu_Rio_WaitGroup Qiniu_Rio_MTWG_Create(void)
+{
+    Qiniu_Rio_WaitGroup wg;
+    Qiniu_Rio_MTWG_Data * newData = NULL;
+
+    newData = (Qiniu_Rio_MTWG_Data*)malloc(sizeof(*newData));
+    newData->addedCount = 0;
+    newData->doneCount = 0;
+    newData->event = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    wg.itbl = &Qiniu_Rio_MTWG_Itbl;
+    wg.self = newData;
+    return wg;
+} // Qiniu_Rio_MTWG_Create
+
+#endif
+
 static void Qiniu_Rio_STWG_Add(void* self, int n) {}
 static void Qiniu_Rio_STWG_Done(void* self)	{}
 static void Qiniu_Rio_STWG_Wait(void* self)	{}
@@ -640,6 +706,7 @@ Qiniu_Error Qiniu_Rio_Put(
 
 	Qiniu_Rio_PutExtra_Cleanup(&extra);
 
+	wg.itbl->Release(wg.self);
 	auth.itbl->Release(auth.self);
 	self->auth = auth1;
 	return err;

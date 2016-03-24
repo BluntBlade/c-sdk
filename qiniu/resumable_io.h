@@ -43,6 +43,12 @@ typedef struct _Qiniu_Rio_WaitGroup {
 	Qiniu_Rio_WaitGroup_Itbl* itbl;
 } Qiniu_Rio_WaitGroup;
 
+#if defined(_WIN32)
+
+Qiniu_Rio_WaitGroup Qiniu_Rio_WaitGroup_Create(void);
+
+#endif
+
 /*============================================================================*/
 /* type Qiniu_Rio_ThreadModel */
 

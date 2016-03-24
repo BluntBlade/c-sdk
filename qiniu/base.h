@@ -111,7 +111,7 @@ void Qiniu_Free(void* addr);
 /*============================================================================*/
 /* type Qiniu_Count */
 
-typedef volatile long Qiniu_Count;
+typedef long Qiniu_Count;
 
 Qiniu_Count Qiniu_Count_Inc(Qiniu_Count* self);
 Qiniu_Count Qiniu_Count_Dec(Qiniu_Count* self);
