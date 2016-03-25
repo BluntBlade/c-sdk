@@ -45,7 +45,7 @@ typedef struct _Qiniu_Rio_WaitGroup {
 
 #if defined(_WIN32)
 
-Qiniu_Rio_WaitGroup Qiniu_Rio_WaitGroup_Create(void);
+Qiniu_Rio_WaitGroup Qiniu_Rio_MTWG_Create(void);
 
 #endif
 
