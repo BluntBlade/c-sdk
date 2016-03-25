@@ -615,8 +615,8 @@ lzRetry:
         if (err.code == Qiniu_Rio_PutInterrupted) {
             // Terminate the upload process if the caller requests
 			Qiniu_Rio_BlkputRet_Cleanup(&ret);
-			free(task);
 			Qiniu_Count_Inc(task->ninterrupts);
+			free(task);
 			wg.itbl->Done(wg.self);
             return;
         }
