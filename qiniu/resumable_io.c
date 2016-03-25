@@ -111,8 +111,9 @@ static Qiniu_Client* Qiniu_Rio_ST_ClientTls(void* self, Qiniu_Client* mc) {
 	return mc;
 }
 
-static void Qiniu_Rio_ST_RunTask(void* self, void (*task)(void* params), void* params) {
+static int Qiniu_Rio_ST_RunTask(void* self, void (*task)(void* params), void* params) {
 	task(params);
+    return QINIU_RIO_NOTIFY_OK;
 }
 
 static Qiniu_Rio_ThreadModel_Itbl Qiniu_Rio_ST_Itbl = {
@@ -658,6 +659,7 @@ Qiniu_Error Qiniu_Rio_Put(
 	Qiniu_Auth auth, auth1 = self->auth;
 	int i, last, blkSize;
 	int nfails;
+    int retCode;
     Qiniu_Count ninterrupts;
 	Qiniu_Error err = Qiniu_Rio_PutExtra_Init(&extra, fsize, extra1);
 	if (err.code != 200) {
@@ -688,12 +690,19 @@ Qiniu_Error Qiniu_Rio_Put(
 			offbase = (Qiniu_Int64)(i) << blockBits;
 			task->blkSize1 = (int)(fsize - offbase);
 		}
-		wg.itbl->Add(wg.self, 1);
-		tm.itbl->RunTask(tm.self, Qiniu_Rio_doTask, task);
+
+		retCode = tm.itbl->RunTask(tm.self, Qiniu_Rio_doTask, task);
+		if (retCode == QINIU_RIO_NOTIFY_EXIT) {
+            free(task);
+			Qiniu_Count_Inc(&ninterrupts);
+		} else {
+			wg.itbl->Add(wg.self, 1);
+		}
+
 		if (ninterrupts > 0) {
 			break;
 		}
-	}
+	} // for
 
 	wg.itbl->Wait(wg.self);
 	if (nfails != 0) {

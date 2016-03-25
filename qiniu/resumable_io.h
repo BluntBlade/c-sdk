@@ -55,7 +55,7 @@ Qiniu_Rio_WaitGroup Qiniu_Rio_WaitGroup_Create(void);
 typedef struct _Qiniu_Rio_ThreadModel_Itbl {
 	Qiniu_Rio_WaitGroup (*WaitGroup)(void* self);
 	Qiniu_Client* (*ClientTls)(void* self, Qiniu_Client* mc);
-	void (*RunTask)(void* self, void (*task)(void* params), void* params);
+	int (*RunTask)(void* self, void (*task)(void* params), void* params);
 } Qiniu_Rio_ThreadModel_Itbl;
 
 typedef struct _Qiniu_Rio_ThreadModel {
