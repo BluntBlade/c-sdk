@@ -691,12 +691,12 @@ Qiniu_Error Qiniu_Rio_Put(
 			task->blkSize1 = (int)(fsize - offbase);
 		}
 
+		wg.itbl->Add(wg.self, 1);
 		retCode = tm.itbl->RunTask(tm.self, Qiniu_Rio_doTask, task);
 		if (retCode == QINIU_RIO_NOTIFY_EXIT) {
-            free(task);
+			wg.itbl->Done(wg.self);
 			Qiniu_Count_Inc(&ninterrupts);
-		} else {
-			wg.itbl->Add(wg.self, 1);
+            free(task);
 		}
 
 		if (ninterrupts > 0) {
