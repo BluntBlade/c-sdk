@@ -63,7 +63,7 @@ typedef struct _Qiniu_Rio_ThreadModel {
 	Qiniu_Rio_ThreadModel_Itbl* itbl;
 } Qiniu_Rio_ThreadModel;
 
-extern Qiniu_Rio_ThreadModel Qiniu_Rio_ST;
+QINIU_DLLAPI extern Qiniu_Rio_ThreadModel Qiniu_Rio_ST;
 
 /*============================================================================*/
 /* type Qiniu_Rio_Settings */
@@ -76,7 +76,7 @@ typedef struct _Qiniu_Rio_Settings {
 	Qiniu_Rio_ThreadModel threadModel;
 } Qiniu_Rio_Settings;
 
-void Qiniu_Rio_SetSettings(Qiniu_Rio_Settings* v);
+QINIU_DLLAPI extern void Qiniu_Rio_SetSettings(Qiniu_Rio_Settings* v);
 
 /*============================================================================*/
 /* type Qiniu_Rio_PutExtra */
@@ -136,7 +136,7 @@ typedef Qiniu_Io_PutRet Qiniu_Rio_PutRet;
 /*============================================================================*/
 /* func Qiniu_Rio_BlockCount */
 
-int Qiniu_Rio_BlockCount(Qiniu_Int64 fsize);
+QINIU_DLLAPI extern int Qiniu_Rio_BlockCount(Qiniu_Int64 fsize);
 
 /*============================================================================*/
 /* func Qiniu_Rio_PutXXX */
@@ -145,11 +145,11 @@ int Qiniu_Rio_BlockCount(Qiniu_Int64 fsize);
 #define QINIU_UNDEFINED_KEY		NULL
 #endif
 
-Qiniu_Error Qiniu_Rio_Put(
+QINIU_DLLAPI extern Qiniu_Error Qiniu_Rio_Put(
 	Qiniu_Client* self, Qiniu_Rio_PutRet* ret,
 	const char* uptoken, const char* key, Qiniu_ReaderAt f, Qiniu_Int64 fsize, Qiniu_Rio_PutExtra* extra);
 
-Qiniu_Error Qiniu_Rio_PutFile(
+QINIU_DLLAPI extern Qiniu_Error Qiniu_Rio_PutFile(
 	Qiniu_Client* self, Qiniu_Rio_PutRet* ret,
 	const char* uptoken, const char* key, const char* localFile, Qiniu_Rio_PutExtra* extra);
 

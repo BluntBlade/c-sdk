@@ -59,11 +59,11 @@ typedef struct _Qiniu_Io_PutRet {
 #define QINIU_UNDEFINED_KEY		NULL
 #endif
 
-Qiniu_Error Qiniu_Io_PutFile(
+QINIU_DLLAPI extern Qiniu_Error Qiniu_Io_PutFile(
 	Qiniu_Client* self, Qiniu_Io_PutRet* ret,
 	const char* uptoken, const char* key, const char* localFile, Qiniu_Io_PutExtra* extra);
 
-Qiniu_Error Qiniu_Io_PutBuffer(
+QINIU_DLLAPI extern Qiniu_Error Qiniu_Io_PutBuffer(
 	Qiniu_Client* self, Qiniu_Io_PutRet* ret,
 	const char* uptoken, const char* key, const char* buf, size_t fsize, Qiniu_Io_PutExtra* extra);
 
