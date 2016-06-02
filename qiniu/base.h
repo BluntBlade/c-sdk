@@ -22,10 +22,6 @@
 
 #ifdef _WIN32
 
-#ifndef QINIU_EXPORTS
-#pragma comment(lib, "qiniu.lib")
-#endif
-
 #include <sys/types.h>
 
 #ifndef _W64
