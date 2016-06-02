@@ -13,7 +13,7 @@
 #include <errno.h>
 
 #ifdef _WIN32
-#include "../../c-sdk-wdeps/emu-posix/emu_posix.h" // for type Qiniu_Posix_File
+#include "../windows/emu_posix.h" // for type Qiniu_Posix_File
 #else
 #include <unistd.h>
 #define Qiniu_Posix_Handle	int
