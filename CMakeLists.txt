@@ -10,6 +10,7 @@ include_directories (qiniu b64 cJSON)
 ### Platform Settings
 
 set (MY_COMPILE_DEFINITIONS "")
+set (MY_COMPILE_FLAGS "")
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 
@@ -34,7 +35,7 @@ else ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     set (MY_LINKING_LIBRARIES curl crypto)
 
     if (DEFINED FUNCTION_LEVEL_LINKING AND ${FUNCTION_LEVEL_LINKING})
-        set_target_properties (qiniu PROPERTIES COMPILE_FLAGS -ffunction-sections)
+        list (APPEND MY_COMPILE_FLAGS -ffunction-sections)
     endif (DEFINED FUNCTION_LEVEL_LINKING AND ${FUNCTION_LEVEL_LINKING})
 
 endif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
@@ -52,6 +53,10 @@ if (DEFINED BUILD_SHARED_LIBS AND ${BUILD_SHARED_LIBS})
 else (DEFINED BUILD_SHARED_LIBS AND ${BUILD_SHARED_LIBS})
 
     add_library (qiniu STATIC ${MY_SOURCE_FILES})
+
+    if (NOT ("X${MY_COMPILE_FLAGS}" STREQUAL "X"))
+        set_target_properties (qiniu PROPERTIES COMPILE_FLAGS ${MY_COMPILE_FLAGS})
+    endif (NOT ("X${MY_COMPILE_FLAGS}" STREQUAL "X"))
 
 endif (DEFINED BUILD_SHARED_LIBS AND ${BUILD_SHARED_LIBS})
 
