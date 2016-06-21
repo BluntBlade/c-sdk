@@ -8,6 +8,7 @@
  */
 
 #include "http.h"
+#include "region.h"
 #include "../cJSON/cJSON.h"
 #include <curl/curl.h>
 
@@ -72,6 +73,7 @@ void Qiniu_Buffer_formatInit();
 void Qiniu_Global_Init(long flags)
 {
 	Qiniu_Buffer_formatInit();
+	Qiniu_Rgn_Enable();
 	curl_global_init(CURL_GLOBAL_ALL);
 }
 
@@ -125,8 +127,6 @@ Qiniu_Error Qiniu_callex(CURL* curl, Qiniu_Buffer *resp, Qiniu_Json** ret, Qiniu
 		err.message = "curl_easy_perform error";
 	}
 
-	printf("code %d\n", err.code);
-
 	return err;
 }
 
@@ -147,6 +147,20 @@ const char* Qiniu_Json_GetString(Qiniu_Json* self, const char* key, const char* 
 	}
 }
 
+const char* Qiniu_Json_GetStringAt(Qiniu_Json* self, int n, const char* defval)
+{
+	Qiniu_Json* sub;
+	if (self == NULL) {
+		return defval;
+	}
+	sub = cJSON_GetArrayItem(self, n);
+	if (sub != NULL && sub->type == cJSON_String) {
+		return sub->valuestring;
+	} else {
+		return defval;
+	}
+}
+
 Qiniu_Int64 Qiniu_Json_GetInt64(Qiniu_Json* self, const char* key, Qiniu_Int64 defval)
 {
 	Qiniu_Json* sub;
@@ -160,6 +174,38 @@ Qiniu_Int64 Qiniu_Json_GetInt64(Qiniu_Json* self, const char* key, Qiniu_Int64 d
 		return defval;
 	}
 }
+
+int Qiniu_Json_GetBoolean(Qiniu_Json* self, const char* key, int defval)
+{
+	Qiniu_Json* sub;
+	if (self == NULL) {
+		return defval;
+	}
+	sub = cJSON_GetObjectItem(self, key);
+	if (sub != NULL) {
+		if (sub->type == cJSON_False) {
+			return 0;
+		} else if (sub->type == cJSON_True) {
+			return 1;
+		} // if
+	} else {
+		return defval;
+	}
+} // Qiniu_Json_GetBoolean
+
+Qiniu_Json* Qiniu_Json_GetElement(Qiniu_Json* self, const char* key, Qiniu_Json* defval)
+{
+	Qiniu_Json* sub;
+	if (self == NULL) {
+		return defval;
+	}
+	sub = cJSON_GetObjectItem(self, key);
+	if (sub != NULL && sub->type == cJSON_Object) {
+		return sub;
+	} else {
+		return defval;
+	}
+} // Qiniu_Json_GetElement
 
 void Qiniu_Json_Destroy(Qiniu_Json* self)
 {
@@ -199,8 +245,10 @@ void Qiniu_Client_InitEx(Qiniu_Client* self, Qiniu_Auth auth, size_t bufSize)
 
 	self->boundNic = NULL;
 
-    self->lowSpeedLimit = 0;
-    self->lowSpeedTime = 0;
+	self->lowSpeedLimit = 0;
+	self->lowSpeedTime = 0;
+
+	self->regionTable = Qiniu_Rgn_Table_Create();
 }
 
 void Qiniu_Client_InitNoAuth(Qiniu_Client* self, size_t bufSize)
@@ -222,6 +270,10 @@ void Qiniu_Client_Cleanup(Qiniu_Client* self)
 		cJSON_Delete(self->root);
 		self->root = NULL;
 	}
+	if (self->regionTable != NULL) {
+		Qiniu_Rgb_Table_Destroy(self->regionTable);
+		self->regionTable = NULL;
+	} // if
 	Qiniu_Buffer_Cleanup(&self->b);
 	Qiniu_Buffer_Cleanup(&self->respHeader);
 }
@@ -233,8 +285,8 @@ void Qiniu_Client_BindNic(Qiniu_Client* self, const char* nic)
 
 void Qiniu_Client_SetLowSpeedLimit(Qiniu_Client* self, long lowSpeedLimit, long lowSpeedTime)
 {
-    self->lowSpeedLimit = lowSpeedLimit;
-    self->lowSpeedTime = lowSpeedTime;
+	self->lowSpeedLimit = lowSpeedLimit;
+	self->lowSpeedTime = lowSpeedTime;
 } // Qiniu_Client_SetLowSpeedLimit
 
 CURL* Qiniu_Client_reset(Qiniu_Client* self)

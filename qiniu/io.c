@@ -57,6 +57,8 @@ static Qiniu_Error Qiniu_Io_call(
 	int retCode = 0;
 	Qiniu_Error err;
 	struct curl_slist* headers = NULL;
+	const char * upHost = NULL;
+	Qiniu_Rgn_HostVote upHostVote;
 
 	CURL* curl = Qiniu_Client_reset(self);
 
@@ -88,7 +90,31 @@ static Qiniu_Error Qiniu_Io_call(
 
 	headers = curl_slist_append(NULL, "Expect:");
 
-	curl_easy_setopt(curl, CURLOPT_URL, QINIU_UP_HOST);
+	//// For using multi-region storage.
+	{
+		if ((upHost = extra->upHost) == NULL) {
+			if (Qiniu_Rgn_IsEnabled()) {
+				if (extra->upBucket && extra->accessKey) {
+					err = Qiniu_Rgn_Table_GetUpHost(self->regionTable, self, extra->upBucket, extra->accessKey, extra->upHostFlags, &upHost, &upHostVote);
+				} else {
+					err = Qiniu_Rgn_Table_GetUpHostByUptoken(self->regionTable, self, extra->uptoken, extra->upHostFlags, &upHost, &upHostVote);
+				} // if
+				if (err.code != 200) {
+					return err;
+				} // if
+			} else {
+				upHost = QINIU_UP_HOST;
+			} // if
+
+			if (upHost == NULL) {
+				err.code = 9988;
+				err.message = "No proper upload host name";
+				return err;
+			} // if
+		} // if
+	} 
+
+	curl_easy_setopt(curl, CURLOPT_URL, upHost);
 	curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
@@ -100,6 +126,13 @@ static Qiniu_Error Qiniu_Io_call(
 			ret->hash = Qiniu_Json_GetString(self->root, "hash", NULL);
 			ret->key = Qiniu_Json_GetString(self->root, "key", NULL);
 		} 
+	}
+
+	//// For using multi-region storage.
+	{
+		if (Qiniu_Rgn_IsEnabled()) {
+			Qiniu_Rgn_Table_VoteHost(self->regionTable, &upHostVote, err);
+		} // if
 	}
 
 	curl_formfree(formpost);
@@ -127,6 +160,15 @@ Qiniu_Error Qiniu_Io_PutFile(
             &form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_FILE, localFile, CURLFORM_END);
     }
 
+	//// For using multi-region storage.
+	{
+		if (Qiniu_Rgn_IsEnabled()) {
+			if (!extra->uptoken) {
+				extra->uptoken = uptoken;
+			} // if
+		} // if
+	}
+
 	return Qiniu_Io_call(self, ret, form.formpost, extra);
 }
 
@@ -147,6 +189,15 @@ Qiniu_Error Qiniu_Io_PutBuffer(
 	curl_formadd(
 		&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file",
 		CURLFORM_BUFFER, key, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, fsize, CURLFORM_END);
+
+	//// For using multi-region storage.
+	{
+		if (Qiniu_Rgn_IsEnabled()) {
+			if (!extra->uptoken) {
+				extra->uptoken = uptoken;
+			} // if
+		} // if
+	}
 
 	return Qiniu_Io_call(self, ret, form.formpost, extra);
 }

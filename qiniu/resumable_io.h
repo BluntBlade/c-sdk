@@ -126,6 +126,13 @@ typedef struct _Qiniu_Rio_PutExtra {
 	// (extra->xVarsList[i])[1] set as the value, e.g. "priceless".
 	const char* (*xVarsList)[2];
 	int xVarsCount;
+
+	// For those who want to send request to specific host.
+	const char* upHost;
+	Qiniu_Uint32 upHostFlags;
+	const char* upBucket;
+	const char* accessKey;
+	const char* uptoken;
 } Qiniu_Rio_PutExtra;
 
 /*============================================================================*/
