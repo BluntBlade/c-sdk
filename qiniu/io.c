@@ -95,9 +95,9 @@ static Qiniu_Error Qiniu_Io_call(
 		if ((upHost = extra->upHost) == NULL) {
 			if (Qiniu_Rgn_IsEnabled()) {
 				if (extra->upBucket && extra->accessKey) {
-					err = Qiniu_Rgn_Table_GetUpHost(self->regionTable, self, extra->upBucket, extra->accessKey, extra->upHostFlags, &upHost, &upHostVote);
+					err = Qiniu_Rgn_Table_GetHost(self->regionTable, self, extra->upBucket, extra->accessKey, extra->upHostFlags, &upHost, &upHostVote);
 				} else {
-					err = Qiniu_Rgn_Table_GetUpHostByUptoken(self->regionTable, self, extra->uptoken, extra->upHostFlags, &upHost, &upHostVote);
+					err = Qiniu_Rgn_Table_GetHostByUptoken(self->regionTable, self, extra->uptoken, extra->upHostFlags, &upHost, &upHostVote);
 				} // if
 				if (err.code != 200) {
 					return err;
