@@ -36,7 +36,7 @@ typedef struct _Qiniu_Rgn_HostInfo {
 } Qiniu_Rgn_HostInfo;
 
 typedef struct _Qiniu_Rgn_RegionInfo {
-	Qiniu_Int64 nextTimestampToUpdate;
+	Qiniu_Uint64 nextTimestampToUpdate;
 
 	const char * bucket;
 

@@ -1,6 +1,16 @@
+/*
+ ============================================================================
+ Name        : region.c
+ Author      : Qiniu.com
+ Copyright   : 2016(c) Shanghai Qiniu Information Technologies Co., Ltd.
+ Description :
+ ============================================================================
+ */
+
 #include <curl/curl.h>
 
 #include "conf.h"
+#include "tm.h"
 #include "region.h"
 
 #ifdef __cplusplus

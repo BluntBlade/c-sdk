@@ -46,6 +46,7 @@ QINIU_DLLAPI extern Qiniu_Posix_Handle Qiniu_Posix_Open(const char* file, int of
 QINIU_DLLAPI extern ssize_t Qiniu_Posix_Pread2(Qiniu_Posix_Handle fd, void* buf, size_t nbytes, Emu_Off_T offset);
 QINIU_DLLAPI extern int Qiniu_Posix_Fstat2(Qiniu_Posix_Handle fd, Emu_FileInfo* buf);
 QINIU_DLLAPI extern int Qiniu_Posix_Close(Qiniu_Posix_Handle fd);
+QINIU_DLLAPI extern unsigned _int64 Qiniu_Posix_GetTimeofDay(void);
 
 /*============================================================================*/
 

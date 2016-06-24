@@ -77,3 +77,10 @@ int Qiniu_Posix_Close(Qiniu_Posix_Handle fd)
 	errno = GetLastError();
 	return -1;
 }
+
+unsigned _int64 Qiniu_Posix_GetTimeofDay(void)
+{
+	FILETIME tv;
+	GetSystemTimeAsFileTime(&tv);
+	return (tv.dwHighDateTime << (sizeof(tv.dwHighDateTime) * 8)) | tv.dwLowDateTime;
+} // Qiniu_Posix_GetTimeofDay
