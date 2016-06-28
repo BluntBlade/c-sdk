@@ -78,7 +78,7 @@ int Qiniu_Posix_Close(Qiniu_Posix_Handle fd)
 	return -1;
 }
 
-unsigned _int64 Qiniu_Posix_GetTimeofDay(void)
+unsigned _int64 Qiniu_Posix_GetTimeOfDay(void)
 {
 	FILETIME tv;
 	GetSystemTimeAsFileTime(&tv);

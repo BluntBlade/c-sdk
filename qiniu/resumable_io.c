@@ -734,7 +734,6 @@ Qiniu_Error Qiniu_Rio_Put(
 	int nfails;
     int retCode;
     Qiniu_Count ninterrupts;
-	Qiniu_Rgn_HostVote upHostVote;
 	Qiniu_Error err = Qiniu_Rio_PutExtra_Init(&extra, fsize, extra1);
 	if (err.code != 200) {
 		return err;

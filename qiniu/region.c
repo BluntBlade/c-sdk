@@ -369,7 +369,8 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_SetRegionInfo(Qiniu_Rgn_RegionTa
 
 	newRegions = calloc(1, sizeof(Qiniu_Rgn_RegionInfo *) * rgnTable->rgnCount + 1);
 	if (!newRegions) {
-		// TODO: Return an appropriate error.
+		err.code = 499;
+		err.message = "No enough memory";
 		return err;
 	} // if
 
@@ -382,7 +383,7 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_SetRegionInfo(Qiniu_Rgn_RegionTa
 	return Qiniu_OK;
 } // Qiniu_Rgn_Table_SetRegionInfo
 
-QINIU_DLLAPI extern Qiniu_Rgn_RegionInfo * Qiniu_Rgn_GetRegionInfo(Qiniu_Rgn_RegionTable * rgnTable, const char * bucket)
+QINIU_DLLAPI extern Qiniu_Rgn_RegionInfo * Qiniu_Rgn_Table_GetRegionInfo(Qiniu_Rgn_RegionTable * rgnTable, const char * bucket)
 {
 	Qiniu_Uint32 i = 0;
 	for (i = 0; i < rgnTable->rgnCount; i += 1) {
@@ -391,7 +392,7 @@ QINIU_DLLAPI extern Qiniu_Rgn_RegionInfo * Qiniu_Rgn_GetRegionInfo(Qiniu_Rgn_Reg
 		} // if
 	} // for
 	return NULL;
-} // Qiniu_Rgn_GetRegionInfo
+} // Qiniu_Rgn_Table_GetRegionInfo
 
 QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHost(
 	Qiniu_Rgn_RegionTable * rgnTable,
@@ -433,7 +434,7 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHost(
 	return Qiniu_OK;
 } // Qiniu_Rgn_Table_GetHost
 
-QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHostByToken(
+QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHostByUptoken(
 	Qiniu_Rgn_RegionTable * rgnTable,
 	Qiniu_Client * cli,
 	const char * uptoken,
@@ -454,7 +455,7 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHostByToken(
 	free(bucket);
 	free(accessKey);
 	return Qiniu_OK;
-} // Qiniu_Rgn_Table_GetHostByToken
+} // Qiniu_Rgn_Table_GetHostByUptoken
 
 static void Qiniu_Rgn_Vote_downgradeHost(Qiniu_Rgn_HostVote * vote)
 {
