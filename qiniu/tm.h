@@ -12,10 +12,6 @@
 
 #include "base.h"
 
-#ifdef _WIN32
-#include "../windows/emu_posix.h" // for type Qiniu_Posix_GetTimeOfDay
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {

@@ -180,7 +180,7 @@ int Qiniu_Json_GetBoolean(Qiniu_Json* self, const char* key, int defval)
 	Qiniu_Json* sub;
 	if (self == NULL) {
 		return defval;
-	}
+	} // if
 	sub = cJSON_GetObjectItem(self, key);
 	if (sub != NULL) {
 		if (sub->type == cJSON_False) {
@@ -188,9 +188,8 @@ int Qiniu_Json_GetBoolean(Qiniu_Json* self, const char* key, int defval)
 		} else if (sub->type == cJSON_True) {
 			return 1;
 		} // if
-	} else {
-		return defval;
-	}
+	} // if
+    return defval;
 } // Qiniu_Json_GetBoolean
 
 Qiniu_Json* Qiniu_Json_GetElement(Qiniu_Json* self, const char* key, Qiniu_Json* defval)
@@ -271,7 +270,7 @@ void Qiniu_Client_Cleanup(Qiniu_Client* self)
 		self->root = NULL;
 	}
 	if (self->regionTable != NULL) {
-		Qiniu_Rgb_Table_Destroy(self->regionTable);
+		Qiniu_Rgn_Table_Destroy(self->regionTable);
 		self->regionTable = NULL;
 	} // if
 	Qiniu_Buffer_Cleanup(&self->b);

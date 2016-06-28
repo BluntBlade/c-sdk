@@ -8,7 +8,6 @@
  */
 
 #include "tm.h"
-#include <sys/time.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -17,12 +16,16 @@ extern "C"
 
 #ifdef _WIN32
 
+#include "../windows/emu_posix.h" // for type Qiniu_Posix_GetTimeOfDay
+
 QINIU_DLLAPI extern Qiniu_Uint64 Qiniu_Tm_LocalTime(void)
 {
 	return Qiniu_Posix_GetTimeOfDay();
 } // Qiniu
 
 #else
+
+#include <sys/time.h>
 
 QINIU_DLLAPI extern Qiniu_Uint64 Qiniu_Tm_LocalTime(void)
 {
