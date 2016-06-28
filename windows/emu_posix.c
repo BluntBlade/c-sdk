@@ -81,6 +81,9 @@ int Qiniu_Posix_Close(Qiniu_Posix_Handle fd)
 unsigned _int64 Qiniu_Posix_GetTimeOfDay(void)
 {
 	FILETIME tv;
+	ULARGE_INTEGER uint;
 	GetSystemTimeAsFileTime(&tv);
-	return (tv.dwHighDateTime << (sizeof(tv.dwHighDateTime) * 8)) | tv.dwLowDateTime;
-} // Qiniu_Posix_GetTimeofDay
+	uint.u.LowPart = tv.dwLowDateTime;
+	uint.u.HighPart = tv.dwHighDateTime;
+	return uint.QuadPart / 1000L;
+} // Qiniu_Posix_GetTimeOfDay
