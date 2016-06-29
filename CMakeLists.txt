@@ -37,7 +37,6 @@ else ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     set (MY_LINKING_LIBRARIES curl crypto)
 
     list (APPEND MY_COMPILE_FLAGS -Wall)
-    message ("compiling flags " ${MY_COMPILE_FLAGS})
 
     if (DEFINED FUNCTION_LEVEL_LINKING AND ${FUNCTION_LEVEL_LINKING})
         list (APPEND MY_COMPILE_FLAGS -ffunction-sections)
@@ -74,3 +73,5 @@ endif (NOT ("X${MY_COMPILE_FLAGS}" STREQUAL "X"))
 if (NOT ("X${MY_COMPILE_DEFINITIONS}" STREQUAL "X"))
     set_target_properties (qiniu PROPERTIES COMPILE_DEFINITIONS ${MY_COMPILE_DEFINITIONS})
 endif (NOT ("X${MY_COMPILE_DEFINITIONS}" STREQUAL "X"))
+
+add_subdirectory (demo)
