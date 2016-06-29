@@ -188,7 +188,8 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Info_Fetch(Qiniu_Client * cli, Qiniu_R
 	newRgnInfo->upHostCount = upHostCount;
 	newRgnInfo->ioHostCount = ioHostCount;
 	newRgnInfo->global = Qiniu_Json_GetBoolean(root, "global", 0);
-	newRgnInfo->nextTimestampToUpdate = Qiniu_Json_GetInt64(root, "ttl", 86400) + Qiniu_Tm_LocalTime();
+	newRgnInfo->ttl = Qiniu_Json_GetInt64(root, "ttl", 86400) ;
+	newRgnInfo->nextTimestampToUpdate = newRgnInfo->ttl + Qiniu_Tm_LocalTime();
 
 	newRgnInfo->bucket = pos;
 	memcpy((void*)newRgnInfo->bucket, bucket, strlen(bucket));
