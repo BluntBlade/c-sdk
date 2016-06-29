@@ -42,7 +42,7 @@ static void Qiniu_Rgn_Info_measureHosts(Qiniu_Json * root, Qiniu_Uint32 * bufLen
 	Qiniu_Json * arr = NULL;
 	const char * str = NULL;
 
-	arr = Qiniu_Json_GetElement(root, "up", NULL);
+	arr = Qiniu_Json_GetObjectItem(root, "up", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
 			*bufLen += strlen(str) + 1;
@@ -51,7 +51,7 @@ static void Qiniu_Rgn_Info_measureHosts(Qiniu_Json * root, Qiniu_Uint32 * bufLen
 	} // if
 
 	i = 0;
-	arr = Qiniu_Json_GetElement(root, "io", NULL);
+	arr = Qiniu_Json_GetObjectItem(root, "io", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
 			*bufLen += strlen(str) + 1;
@@ -67,7 +67,7 @@ static void Qiniu_Rgn_Info_duplicateHosts(Qiniu_Json * root, Qiniu_Rgn_HostInfo 
 	Qiniu_Json * arr = NULL;
 	const char * str = NULL;
 
-	arr = Qiniu_Json_GetElement(root, "up", NULL);
+	arr = Qiniu_Json_GetObjectItem(root, "up", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
 			(**upHosts)->flags = hostFlags;
@@ -80,7 +80,7 @@ static void Qiniu_Rgn_Info_duplicateHosts(Qiniu_Json * root, Qiniu_Rgn_HostInfo 
 	} // if
 
 	i = 0;
-	arr = Qiniu_Json_GetElement(root, "io", NULL);
+	arr = Qiniu_Json_GetObjectItem(root, "io", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
 			(**ioHosts)->flags = hostFlags | QINIU_RGN_DOWNLOAD_HOST;
@@ -119,11 +119,11 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Info_Fetch(Qiniu_Client * cli, Qiniu_R
 
 	bufLen += sizeof(Qiniu_Rgn_RegionInfo) + strlen(bucket) + 1;
 
-	http = Qiniu_Json_GetElement(root, "http", NULL);
+	http = Qiniu_Json_GetObjectItem(root, "http", NULL);
 	if (http) {
 		Qiniu_Rgn_Info_measureHosts(http, &bufLen, &upHostCount, &ioHostCount);
 	} // if
-	https = Qiniu_Json_GetElement(root, "https", NULL);
+	https = Qiniu_Json_GetObjectItem(root, "https", NULL);
 	if (https) {
 		Qiniu_Rgn_Info_measureHosts(https, &bufLen, &upHostCount, &ioHostCount);
 	} // if
@@ -250,6 +250,7 @@ static Qiniu_Error Qiniu_Rgn_parseQueryArguments(const char * uptoken, char ** b
 		err.message = "No enough memory";
 		return err;
 	} // if
+	memcpy(*bucket, begin, end - begin);
 	return Qiniu_OK;
 } // Qiniu_Rgn_parseQueryArguments
 
@@ -407,6 +408,7 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHost(
 	Qiniu_Rgn_RegionInfo * rgnInfo = NULL;
 	Qiniu_Rgn_RegionInfo * newRgnInfo = NULL;
 
+	memset(upHostVote, 0, sizeof(Qiniu_Rgn_HostVote));
 	rgnInfo = Qiniu_Rgn_Table_GetRegionInfo(rgnTable, bucket);
 	if (!rgnInfo || Qiniu_Rgn_Info_HasExpirated(rgnInfo)) {
 		err = Qiniu_Rgn_Info_Fetch(cli, &newRgnInfo, bucket, accessKey);
@@ -474,6 +476,9 @@ static void Qiniu_Rgn_Vote_downgradeHost(Qiniu_Rgn_HostVote * vote)
 
 QINIU_DLLAPI extern void Qiniu_Rgn_Table_VoteHost(Qiniu_Rgn_RegionTable * rgnTable, Qiniu_Rgn_HostVote * vote, Qiniu_Error err)
 {
+	if (!vote->rgnInfo) {
+		return;
+	} // if
 	if (err.code >= 100) {
 		(*vote->host)->voteCount += 1;
 		return;

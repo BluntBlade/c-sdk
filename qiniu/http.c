@@ -189,22 +189,36 @@ int Qiniu_Json_GetBoolean(Qiniu_Json* self, const char* key, int defval)
 			return 1;
 		} // if
 	} // if
-    return defval;
+	return defval;
 } // Qiniu_Json_GetBoolean
 
-Qiniu_Json* Qiniu_Json_GetElement(Qiniu_Json* self, const char* key, Qiniu_Json* defval)
+Qiniu_Json* Qiniu_Json_GetObjectItem(Qiniu_Json* self, const char* key, Qiniu_Json* defval)
 {
 	Qiniu_Json* sub;
 	if (self == NULL) {
 		return defval;
 	}
 	sub = cJSON_GetObjectItem(self, key);
-	if (sub != NULL && sub->type == cJSON_Object) {
+	if (sub != NULL) {
 		return sub;
 	} else {
 		return defval;
 	}
-} // Qiniu_Json_GetElement
+} // Qiniu_Json_GetObjectItem
+
+Qiniu_Json* Qiniu_Json_GetArrayItem(Qiniu_Json* self, int n, Qiniu_Json* defval)
+{
+	Qiniu_Json* sub;
+	if (self == NULL) {
+		return defval;
+	}
+	sub = cJSON_GetArrayItem(self, n);
+	if (sub != NULL) {
+		return sub;
+	} else {
+		return defval;
+	}
+} // Qiniu_Json_GetArrayItem
 
 void Qiniu_Json_Destroy(Qiniu_Json* self)
 {
