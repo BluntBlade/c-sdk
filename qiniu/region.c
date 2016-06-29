@@ -399,9 +399,12 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_SetRegionInfo(Qiniu_Rgn_RegionTa
 		return err;
 	} // if
 
-	memcpy(newRegions, rgnTable->regions, sizeof(Qiniu_Rgn_RegionInfo *) * rgnTable->rgnCount);
-	free(rgnTable->regions);
+	if (rgnTable->rgnCount > 0) {
+		memcpy(newRegions, rgnTable->regions, sizeof(Qiniu_Rgn_RegionInfo *) * rgnTable->rgnCount);
+	} // if
+	newRegions[rgnTable->rgnCount] = rgnInfo;
 
+	free(rgnTable->regions);
 	rgnTable->regions = newRegions;
 	rgnTable->rgnCount += 1;
 	
