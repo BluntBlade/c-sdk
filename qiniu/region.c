@@ -408,7 +408,7 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHost(
 	Qiniu_Rgn_RegionInfo * rgnInfo = NULL;
 	Qiniu_Rgn_RegionInfo * newRgnInfo = NULL;
 
-	memset(upHostVote, 0, sizeof(Qiniu_Rgn_HostVote));
+	memset(vote, 0, sizeof(Qiniu_Rgn_HostVote));
 	rgnInfo = Qiniu_Rgn_Table_GetRegionInfo(rgnTable, bucket);
 	if (!rgnInfo || Qiniu_Rgn_Info_HasExpirated(rgnInfo)) {
 		err = Qiniu_Rgn_Info_Fetch(cli, &newRgnInfo, bucket, accessKey);
@@ -470,6 +470,7 @@ static void Qiniu_Rgn_Vote_downgradeHost(Qiniu_Rgn_HostVote * vote)
 			*next = *(vote->host);
 			*(vote->host) = t;
 		} // if
+		vote->host = next;
 		next += 1;
 	} // while
 } // Qiniu_Rgn_Vote_downgradeHost
