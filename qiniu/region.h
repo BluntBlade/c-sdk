@@ -24,9 +24,10 @@ QINIU_DLLAPI extern void Qiniu_Rgn_Disable(void);
 QINIU_DLLAPI extern Qiniu_Uint32 Qiniu_Rgn_IsEnabled(void);
 
 enum {
-	QINIU_RGN_HTTPS_HOST        = 0x0001,
-	QINIU_RGN_CDN_HOST          = 0x0002,
-	QINIU_RGN_DOWNLOAD_HOST     = 0x0004
+	QINIU_RGN_HTTP_HOST         = 0x0001,
+	QINIU_RGN_HTTPS_HOST        = 0x0002,
+	QINIU_RGN_CDN_HOST          = 0x0004,
+	QINIU_RGN_DOWNLOAD_HOST     = 0x0008
 };
 
 typedef struct _Qiniu_Rgn_HostInfo {

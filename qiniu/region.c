@@ -179,7 +179,7 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Info_Fetch(Qiniu_Client * cli, Qiniu_R
 	} // for
 
 	if (http) {
-		Qiniu_Rgn_Info_duplicateHosts(http, &upHosts, &ioHosts, &pos, 0);
+		Qiniu_Rgn_Info_duplicateHosts(http, &upHosts, &ioHosts, &pos, QINIU_RGN_HTTP_HOST);
 	} // if
 	if (https) {
 		Qiniu_Rgn_Info_duplicateHosts(https, &upHosts, &ioHosts, &pos, QINIU_RGN_HTTPS_HOST);
@@ -314,6 +314,9 @@ QINIU_DLLAPI extern Qiniu_Uint32 Qiniu_Rgn_Info_CountIoHost(Qiniu_Rgn_RegionInfo
 
 QINIU_DLLAPI extern const char * Qiniu_Rgn_Info_GetHost(Qiniu_Rgn_RegionInfo * rgnInfo, Qiniu_Uint32 n, Qiniu_Uint32 hostFlags)
 {
+	if ((hostFlags & QINIU_RGN_HTTPS_HOST) == 0) {
+		hostFlags |= QINIU_RGN_HTTP_HOST;
+	} // if
 	if (hostFlags & QINIU_RGN_DOWNLOAD_HOST) {
 		if (n < rgnInfo->ioHostCount && (rgnInfo->ioHosts[n]->flags & hostFlags) == hostFlags) {
 			return rgnInfo->ioHosts[n]->host;
@@ -445,6 +448,9 @@ QINIU_DLLAPI extern Qiniu_Error Qiniu_Rgn_Table_GetHost(
 		rgnInfo = newRgnInfo;
 	} // if
 
+	if ((hostFlags & QINIU_RGN_HTTPS_HOST) == 0) {
+		hostFlags |= QINIU_RGN_HTTP_HOST;
+	} // if
 	*upHost = Qiniu_Rgn_Info_GetHost(rgnInfo, 0, hostFlags);
 
 	if (vote) {
