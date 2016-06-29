@@ -36,6 +36,11 @@ QINIU_DLLAPI extern Qiniu_Uint32 Qiniu_Rgn_IsEnabled(void)
 	return (Qiniu_Rgn_enabling != 0);
 } // Qiniu_Rgn_IsEnabled
 
+static inline int Qiniu_Rgn_Info_isValidHost(const char * str)
+{
+	return (strstr(str, "http") == str) || (strstr(str, "HTTP") == str);
+} // Qiniu_Rgn_Info_isValidHost
+
 static void Qiniu_Rgn_Info_measureHosts(Qiniu_Json * root, Qiniu_Uint32 * bufLen, Qiniu_Uint32 * upHostCount, Qiniu_Uint32 * ioHostCount)
 {
 	int i = 0;
@@ -45,6 +50,10 @@ static void Qiniu_Rgn_Info_measureHosts(Qiniu_Json * root, Qiniu_Uint32 * bufLen
 	arr = Qiniu_Json_GetObjectItem(root, "up", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
+			if (!Qiniu_Rgn_Info_isValidHost(str)) {
+				// Skip URLs which contains incorrect schema.
+				continue;
+			} // if
 			*bufLen += strlen(str) + 1;
 			*upHostCount += 1;
 		} // while
@@ -54,6 +63,10 @@ static void Qiniu_Rgn_Info_measureHosts(Qiniu_Json * root, Qiniu_Uint32 * bufLen
 	arr = Qiniu_Json_GetObjectItem(root, "io", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
+			if (!Qiniu_Rgn_Info_isValidHost(str)) {
+				// Skip URLs which contains incorrect schema.
+				continue;
+			} // if
 			*bufLen += strlen(str) + 1;
 			*ioHostCount += 1;
 		} // while
@@ -70,6 +83,10 @@ static void Qiniu_Rgn_Info_duplicateHosts(Qiniu_Json * root, Qiniu_Rgn_HostInfo 
 	arr = Qiniu_Json_GetObjectItem(root, "up", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
+			if (!Qiniu_Rgn_Info_isValidHost(str)) {
+				// Skip URLs which contains incorrect schema.
+				continue;
+			} // if
 			(**upHosts)->flags = hostFlags;
 			(**upHosts)->host = *strPos;
 			len = strlen(str);
@@ -83,6 +100,10 @@ static void Qiniu_Rgn_Info_duplicateHosts(Qiniu_Json * root, Qiniu_Rgn_HostInfo 
 	arr = Qiniu_Json_GetObjectItem(root, "io", NULL);
 	if (arr) {
 		while ((str = Qiniu_Json_GetStringAt(arr, i++, NULL))) {
+			if (!Qiniu_Rgn_Info_isValidHost(str)) {
+				// Skip URLs which contains incorrect schema.
+				continue;
+			} // if
 			(**ioHosts)->flags = hostFlags | QINIU_RGN_DOWNLOAD_HOST;
 			(**ioHosts)->host = *strPos;
 			len = strlen(str);
