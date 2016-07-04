@@ -41,6 +41,10 @@ typedef struct _Qiniu_RS_PutPolicy {
     Qiniu_Uint32 insertOnly;
     Qiniu_Uint32 expires;
     Qiniu_Uint32 deleteAfterDays;
+
+	// For those who want to pass a list of up hosts to clients.
+	const char** upHosts;
+	int upHostCount;
 } Qiniu_RS_PutPolicy;
 
 /* @endgist */

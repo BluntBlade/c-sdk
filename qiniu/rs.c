@@ -20,6 +20,7 @@ char* Qiniu_RS_PutPolicy_Token(Qiniu_RS_PutPolicy* auth, Qiniu_Mac* mac)
 	char* authstr;
 	char* token;
 
+	cJSON* upHosts = NULL;
 	cJSON* root = cJSON_CreateObject();
 
 	if (auth->scope) {
@@ -68,6 +69,10 @@ char* Qiniu_RS_PutPolicy_Token(Qiniu_RS_PutPolicy* auth, Qiniu_Mac* mac)
     if (auth->deleteAfterDays > 0) {
 		cJSON_AddNumberToObject(root, "deleteAfterDays", auth->deleteAfterDays);
     }
+	if (auth->upHosts && auth->upHostCount > 0) {
+		upHosts = cJSON_CreateStringArray(auth->upHosts, auth->upHostCount);
+		cJSON_AddItemToObject(root, "upHosts", upHosts);
+	} // if
 
 	if (auth->expires) {
 		expires = auth->expires;
