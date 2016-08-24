@@ -11,6 +11,7 @@
 #define QINIU_IO_H
 
 #include "http.h"
+#include "region.h"
 
 #pragma pack(1)
 
@@ -42,6 +43,13 @@ typedef struct _Qiniu_Io_PutExtra {
 	// which returns a JSON object.
 	void* callbackRet;
 	Qiniu_Error (*callbackRetParser)(void*, Qiniu_Json*);
+
+	// For those who want to send request to specific host.
+	const char* upHost;
+	Qiniu_Uint32 upHostFlags;
+	const char* upBucket;
+	const char* accessKey;
+	const char* uptoken;
 } Qiniu_Io_PutExtra;
 
 /*============================================================================*/

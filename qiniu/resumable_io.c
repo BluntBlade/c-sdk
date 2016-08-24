@@ -7,6 +7,7 @@
  ============================================================================
  */
 
+#include "region.h"
 #include "resumable_io.h"
 #include <curl/curl.h>
 #include <sys/stat.h>
@@ -284,6 +285,7 @@ static Qiniu_Error Qiniu_Rio_PutExtra_Init(
 	if (self->threadModel.itbl == NULL) {
 		self->threadModel = settings.threadModel;
 	}
+
 	return Qiniu_OK;
 }
 
@@ -345,11 +347,48 @@ static Qiniu_Error Qiniu_Rio_bput(
 }
 
 static Qiniu_Error Qiniu_Rio_Mkblock(
-	Qiniu_Client* self, Qiniu_Rio_BlkputRet* ret, int blkSize, Qiniu_Reader body, int bodyLength)
+	Qiniu_Client* self, Qiniu_Rio_BlkputRet* ret, int blkSize, Qiniu_Reader body, int bodyLength, Qiniu_Rio_PutExtra* extra)
 {
-	char* url = Qiniu_String_Format(128, "%s/mkblk/%d", QINIU_UP_HOST, blkSize);
-	Qiniu_Error err = Qiniu_Rio_bput(self, ret, body, bodyLength, url);
+	Qiniu_Error err;
+	Qiniu_Rgn_HostVote upHostVote;
+	const char * upHost = NULL;
+	char* url = NULL;
+
+	//// For using multi-region storage.
+	{
+		if ((upHost = extra->upHost) == NULL) {
+			if (Qiniu_Rgn_IsEnabled()) {
+				if (extra->upBucket && extra->accessKey) {
+					err = Qiniu_Rgn_Table_GetHost(self->regionTable, self, extra->upBucket, extra->accessKey, extra->upHostFlags, &upHost, &upHostVote);
+				} else {
+					err = Qiniu_Rgn_Table_GetHostByUptoken(self->regionTable, self, extra->uptoken, extra->upHostFlags, &upHost, &upHostVote);
+				} // if
+				if (err.code != 200) {
+					return err;
+				} // if
+			} else {
+				upHost = QINIU_UP_HOST;
+			} // if
+
+			if (upHost == NULL) {
+				err.code = 9988;
+				err.message = "No proper upload host name";
+				return err;
+			} // if
+		} // if
+	} 
+
+	url = Qiniu_String_Format(128, "%s/mkblk/%d", upHost, blkSize);
+	err = Qiniu_Rio_bput(self, ret, body, bodyLength, url);
 	Qiniu_Free(url);
+
+	//// For using multi-region storage.
+	{
+		if (Qiniu_Rgn_IsEnabled()) {
+			Qiniu_Rgn_Table_VoteHost(self->regionTable, &upHostVote, err);
+		} // if
+	}
+
 	return err;
 }
 
@@ -400,7 +439,7 @@ static Qiniu_Error Qiniu_Rio_ResumableBlockput(
 		body1 = Qiniu_SectionReader(&section, f, (Qiniu_Off_T)offbase, bodyLength);
 		body = Qiniu_TeeReader(&tee, body1, h);
 
-		err = Qiniu_Rio_Mkblock(c, ret, blkSize, body, bodyLength);
+		err = Qiniu_Rio_Mkblock(c, ret, blkSize, body, bodyLength, extra);
 		if (err.code != 200) {
 			return err;
 		}
@@ -476,7 +515,7 @@ static Qiniu_Error Qiniu_Rio_Mkfile(
 	Qiniu_Buffer url, body;
 
 	Qiniu_Buffer_Init(&url, 1024);
-	Qiniu_Buffer_AppendFormat(&url, "%s/mkfile/%D", QINIU_UP_HOST, fsize);
+	Qiniu_Buffer_AppendFormat(&url, "%s/mkfile/%D", extra->upHost, fsize);
 
 	if (NULL != key) {
 		Qiniu_Buffer_AppendFormat(&url, "/key/%S", key);
@@ -526,12 +565,39 @@ static Qiniu_Error Qiniu_Rio_Mkfile2(
 	size_t i, blkCount = extra->blockCnt;
 	Qiniu_Json* root;
 	Qiniu_Error err;
+	Qiniu_Rgn_HostVote upHostVote;
+	const char * upHost = NULL;
 	Qiniu_Rio_BlkputRet* prog;
 	Qiniu_Buffer url, body;
 	int j = 0;
 
 	Qiniu_Buffer_Init(&url, 2048);
-	Qiniu_Buffer_AppendFormat(&url, "%s/mkfile/%D", QINIU_UP_HOST, fsize);
+
+	//// For using multi-region storage.
+	{
+		if ((upHost = extra->upHost) == NULL) {
+			if (Qiniu_Rgn_IsEnabled()) {
+				if (extra->upBucket && extra->accessKey) {
+					err = Qiniu_Rgn_Table_GetHost(c->regionTable, c, extra->upBucket, extra->accessKey, extra->upHostFlags, &upHost, &upHostVote);
+				} else {
+					err = Qiniu_Rgn_Table_GetHostByUptoken(c->regionTable, c, extra->uptoken, extra->upHostFlags, &upHost, &upHostVote);
+				} // if
+				if (err.code != 200) {
+					return err;
+				} // if
+			} else {
+				upHost = QINIU_UP_HOST;
+			} // if
+
+			if (upHost == NULL) {
+				err.code = 9988;
+				err.message = "No proper upload host name";
+				return err;
+			} // if
+		} // if
+	} 
+
+	Qiniu_Buffer_AppendFormat(&url, "%s/mkfile/%D", upHost, fsize);
 
 	if (key != NULL) {
 		// Allow using empty key
@@ -558,6 +624,13 @@ static Qiniu_Error Qiniu_Rio_Mkfile2(
 
 	Qiniu_Buffer_Cleanup(&url);
 	Qiniu_Buffer_Cleanup(&body);
+
+	//// For using multi-region storage.
+	{
+		if (Qiniu_Rgn_IsEnabled()) {
+			Qiniu_Rgn_Table_VoteHost(c->regionTable, &upHostVote, err);
+		} // if
+	}
 
 	if (err.code == 200) {
 		ret->hash = Qiniu_Json_GetString(root, "hash", NULL);
@@ -664,6 +737,15 @@ Qiniu_Error Qiniu_Rio_Put(
 	Qiniu_Error err = Qiniu_Rio_PutExtra_Init(&extra, fsize, extra1);
 	if (err.code != 200) {
 		return err;
+	}
+
+	//// For using multi-region storage.
+	{
+		if (Qiniu_Rgn_IsEnabled()) {
+			if (!extra.uptoken) {
+				extra.uptoken = uptoken;
+			} // if
+		} // if
 	}
 
 	tm = extra.threadModel;
