@@ -361,6 +361,7 @@ static Qiniu_Error Qiniu_Client_callWithBody(
 	Qiniu_snprintf(ctxLength, 64, "Content-Length: %lld", bodyLen);
 	headers = curl_slist_append(NULL, ctxLength);
 	headers = curl_slist_append(headers, ctxType);
+	headers = curl_slist_append(headers, "Expect:");
 
 	if (self->auth.itbl != NULL) {
 		if (body == NULL) {
