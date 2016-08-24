@@ -58,7 +58,13 @@ else (DEFINED BUILD_SHARED_LIBS AND ${BUILD_SHARED_LIBS})
         set_target_properties (qiniu PROPERTIES COMPILE_FLAGS ${MY_COMPILE_FLAGS})
     endif (NOT ("X${MY_COMPILE_FLAGS}" STREQUAL "X"))
 
+<<<<<<< Updated upstream
 endif (DEFINED BUILD_SHARED_LIBS AND ${BUILD_SHARED_LIBS})
+=======
+if (NOT ("X${MY_COMPILE_FLAGS}" STREQUAL "X"))
+    set_target_properties (qiniu PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+endif (NOT ("X${MY_COMPILE_FLAGS}" STREQUAL "X"))
+>>>>>>> Stashed changes
 
 if (NOT ("X${MY_COMPILE_DEFINITIONS}" STREQUAL "X"))
     set_target_properties (qiniu PROPERTIES COMPILE_DEFINITIONS ${MY_COMPILE_DEFINITIONS})
