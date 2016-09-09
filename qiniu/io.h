@@ -58,6 +58,7 @@ typedef struct _Qiniu_Io_PutExtra {
 typedef struct _Qiniu_Io_PutRet {
 	const char* hash;
 	const char* key;
+    const char* persistentId;
 } Qiniu_Io_PutRet;
 
 /*============================================================================*/

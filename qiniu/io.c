@@ -125,6 +125,7 @@ static Qiniu_Error Qiniu_Io_call(
 		} else {
 			ret->hash = Qiniu_Json_GetString(self->root, "hash", NULL);
 			ret->key = Qiniu_Json_GetString(self->root, "key", NULL);
+			ret->persistentId = Qiniu_Json_GetString(self->root, "persistentId", NULL);
 		} 
 	}
 
