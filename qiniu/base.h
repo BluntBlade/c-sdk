@@ -286,7 +286,11 @@ typedef struct _Qiniu_FileInfo {
 	time_t          st_ctime;   /* time of last status change */
 } Qiniu_FileInfo;
 #else
+
+#include <sys/stat.h>
+
 typedef struct stat Qiniu_FileInfo;
+
 #endif
 
 QINIU_DLLAPI extern Qiniu_Error Qiniu_File_Open(Qiniu_File** pp, const char* file);

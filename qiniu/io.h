@@ -12,6 +12,7 @@
 
 #include "http.h"
 #include "region.h"
+#include "reader.h"
 
 #pragma pack(1)
 
@@ -50,6 +51,10 @@ typedef struct _Qiniu_Io_PutExtra {
 	const char* upBucket;
 	const char* accessKey;
 	const char* uptoken;
+
+	// For those who want to abort uploading data to server.
+	void * upAbortUserData;
+	Qiniu_Rd_FnAbort upAbortCallback;
 } Qiniu_Io_PutExtra;
 
 /*============================================================================*/

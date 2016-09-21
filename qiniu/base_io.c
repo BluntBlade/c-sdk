@@ -12,6 +12,10 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
 #ifdef _WIN32
 #include "../windows/emu_posix.h" // for type Qiniu_Posix_File
 #else
@@ -240,7 +244,7 @@ int Qiniu_Posix_Fstat(Qiniu_Posix_Handle fd, Qiniu_FileInfo* fi)
 	return 0;
 }
 
-#endif
+#else
 
 Qiniu_Error Qiniu_File_Stat(Qiniu_File* self, Qiniu_FileInfo* fi)
 {
@@ -249,10 +253,15 @@ Qiniu_Error Qiniu_File_Stat(Qiniu_File* self, Qiniu_FileInfo* fi)
 		err.code = errno;
 		err.message = "fstat failed";
 	} else {
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+		fi->st_size >>= 32;
+#endif
 		err = Qiniu_OK;
 	}
 	return err;
 }
+
+#endif
 
 void Qiniu_File_Close(void* self)
 {
