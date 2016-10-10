@@ -187,7 +187,7 @@ Qiniu_Error Qiniu_Io_PutFile(
 			fileSize = extra->upFileSize;
 		} // if
 
-		if (fi.st_size > 0) {
+		if (fileSize > 0) {
 			if (extra->localFileName != NULL) {
 				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fileSize, CURLFORM_FILENAME, extra->localFileName, CURLFORM_END);
 			} else {
@@ -222,7 +222,7 @@ Qiniu_Error Qiniu_Io_PutFile(
 	err = Qiniu_Io_call(self, ret, form.formpost, extra);
 	
 	//// For aborting uploading file.
-	if (extra->upAbortCallback && fi.st_size > 0) {
+	if (extra->upAbortCallback && fileSize > 0) {
 		Qiniu_Rd_Reader_Close(&rdr);
 		if (err.code == CURLE_ABORTED_BY_CALLBACK) {
 			if (rdr.status == QINIU_RD_ABORT_BY_CALLBACK) {
