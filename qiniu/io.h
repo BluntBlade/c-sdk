@@ -55,6 +55,9 @@ typedef struct _Qiniu_Io_PutExtra {
 	// For those who want to abort uploading data to server.
 	void * upAbortUserData;
 	Qiniu_Rd_FnAbort upAbortCallback;
+
+	// Use the following field to specify the size of an uploading file definitively.
+	size_t upFileSize;
 } Qiniu_Io_PutExtra;
 
 /*============================================================================*/

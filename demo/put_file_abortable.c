@@ -9,9 +9,9 @@ static int sizeLimit = 0;
 
 int abortCallback(void * userData, char * buf, size_t size)
 {
-    int * offset = (int *) userData;
-    if ((*offset += size) >= sizeLimit) return 1;
-    return 0;
+	int * offset = (int *) userData;
+	if ((*offset += size) >= sizeLimit) return 1;
+	return 0;
 }
 
 int main(int argc, char * argv[])
@@ -31,10 +31,15 @@ int main(int argc, char * argv[])
 	Qiniu_Servend_Init(0);
 	Qiniu_MacAuth_Init();
 
-    Qiniu_Rgn_Disable();
+	Qiniu_Rgn_Disable();
 
 	memset(&extra, 0, sizeof(extra));
 	memset(&pp, 0, sizeof(pp));
+
+	if (argc < 6) {
+		printf("Usage: put_file_abortable <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY> <LOCAL_FILE> [FILE_SIZE [MAX_FILE_SIZE]]\n");
+		return 1;
+	} // if
 
 	mac.accessKey = argv[1];
 	mac.secretKey = argv[2];
@@ -43,9 +48,13 @@ int main(int argc, char * argv[])
 	localFile = argv[5];
 
 	if (argc >= 7) {
-		sizeLimit = atoi(argv[6]);
-        extra.upAbortCallback = &abortCallback;
-        extra.upAbortUserData = &offset;
+		extra.upFileSize = atoi(argv[6]);
+	} // if
+
+	if (argc >= 8) {
+		sizeLimit = atoi(argv[7]);
+		extra.upAbortCallback = &abortCallback;
+		extra.upAbortUserData = &offset;
 	} // if
 
 	pp.scope = Qiniu_String_Format(512, "%s:%s", bucket, key);

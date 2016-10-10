@@ -160,6 +160,7 @@ Qiniu_Error Qiniu_Io_PutFile(
 	Qiniu_FileInfo fi;
 	Qiniu_Rd_Reader rdr;
 	Qiniu_Io_form form;
+	size_t fileSize;
 	Qiniu_Io_form_init(&form, uptoken, key, &extra);
 
 	//// For aborting uploading file.
@@ -174,17 +175,23 @@ Qiniu_Error Qiniu_Io_PutFile(
 			return err;
 		} // if
 
-		Qiniu_Zero(fi);
-		err = Qiniu_File_Stat(rdr.file, &fi);
-		if (err.code != 200) {
-			return err;
+		if (extra->upFileSize == 0) {
+			Qiniu_Zero(fi);
+			err = Qiniu_File_Stat(rdr.file, &fi);
+			if (err.code != 200) {
+				return err;
+			} // if
+
+			fileSize = fi.st_size;
+		} else {
+			fileSize = extra->upFileSize;
 		} // if
 
 		if (fi.st_size > 0) {
 			if (extra->localFileName != NULL) {
-				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fi.st_size, CURLFORM_FILENAME, extra->localFileName, CURLFORM_END);
+				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fileSize, CURLFORM_FILENAME, extra->localFileName, CURLFORM_END);
 			} else {
-				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fi.st_size, CURLFORM_END);
+				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fileSize, CURLFORM_END);
 			} // if
 		} else {
 			Qiniu_Rd_Reader_Close(&rdr);
