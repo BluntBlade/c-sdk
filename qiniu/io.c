@@ -161,7 +161,15 @@ Qiniu_Error Qiniu_Io_PutFile(
 	Qiniu_Rd_Reader rdr;
 	Qiniu_Io_form form;
 	size_t fileSize;
+	const char * localFileName;
 	Qiniu_Io_form_init(&form, uptoken, key, &extra);
+
+	// BugFix : If the filename attribute of the file form-data section is not assigned or holds an empty string,
+	//          and the real file size is larger than 10MB, then the Go server will return an error like
+	//          "multipart: message too large".
+	//          Assign an arbitary non-empty string to this attribute will force the Go server to write all the data
+	//          into a temporary file and then every thing goes right.
+	localFileName = (extra->localFileName) ? extra->localFileName : "QINIU-C-SDK-UP-FILE";
 
 	//// For aborting uploading file.
 	if (extra->upAbortCallback) {
@@ -187,27 +195,9 @@ Qiniu_Error Qiniu_Io_PutFile(
 			fileSize = extra->upFileSize;
 		} // if
 
-		if (fileSize > 0) {
-			if (extra->localFileName != NULL) {
-				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fileSize, CURLFORM_FILENAME, extra->localFileName, CURLFORM_END);
-			} else {
-				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fileSize, CURLFORM_END);
-			} // if
-		} else {
-			Qiniu_Rd_Reader_Close(&rdr);
-
-			if (extra->localFileName != NULL) {
-				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_FILE, localFile, CURLFORM_FILENAME, extra->localFileName, CURLFORM_END);
-			} else {
-				curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_FILE, localFile, CURLFORM_END);
-			} // if
-		} // if
+		curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_STREAM, &rdr, CURLFORM_CONTENTSLENGTH, (long)fileSize, CURLFORM_FILENAME, localFileName, CURLFORM_END);
 	} else {
-		if (extra->localFileName != NULL) {
-			curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_FILE, localFile, CURLFORM_FILENAME, extra->localFileName, CURLFORM_END);
-		} else {
-			curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_FILE, localFile, CURLFORM_END);
-		} // if
+	    curl_formadd(&form.formpost, &form.lastptr, CURLFORM_COPYNAME, "file", CURLFORM_FILE, localFile, CURLFORM_FILENAME, localFileName, CURLFORM_END);
 	} // if
 
 	//// For using multi-region storage.
@@ -222,7 +212,7 @@ Qiniu_Error Qiniu_Io_PutFile(
 	err = Qiniu_Io_call(self, ret, form.formpost, extra);
 	
 	//// For aborting uploading file.
-	if (extra->upAbortCallback && fileSize > 0) {
+	if (extra->upAbortCallback) {
 		Qiniu_Rd_Reader_Close(&rdr);
 		if (err.code == CURLE_ABORTED_BY_CALLBACK) {
 			if (rdr.status == QINIU_RD_ABORT_BY_CALLBACK) {
